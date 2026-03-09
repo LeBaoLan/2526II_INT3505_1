@@ -8,29 +8,38 @@ inventory = [
     {"id": 2, "name": "Running Shoe", "price": 800}
 ]
 
-# GET /items: Lấy danh sách sản phẩm
+# Danh sách API Key hợp lệ cho nguyên tắc Stateless
+VALID_KEYS = ["admin_key", "lebaolan"]
+
+
+def check_auth():
+    # Server không nhớ ai cả, mỗi lần gọi phải gửi Key qua Header
+    api_key = request.headers.get('X-API-KEY')
+    return api_key in VALID_KEYS
 
 
 @app.route('/items', methods=['GET'])
 def get_items():
+    if not check_auth():
+        # SỬA LỖI: Trả về dictionary chuẩn để jsonify không bị lỗi
+        return jsonify({"error": "Từ chối truy cập! Thiếu định danh."}), 401
     return jsonify(inventory)
-
-# POST /items: Thêm một sản phẩm mới (Dữ liệu gửi trong Body)
 
 
 @app.route('/items', methods=['POST'])
 def add_item():
+    if not check_auth():
+        return jsonify({"error": "Từ chối truy cập! Thiếu định danh."}), 401
     new_data = request.json
     inventory.append(new_data)
     return jsonify({"message": "Thêm thành công!", "item": new_data}), 201
 
-# DELETE /items/<id>: Xóa một sản phẩm cụ thể theo ID
-
 
 @app.route('/items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
+    if not check_auth():
+        return jsonify({"error": "Từ chối truy cập! Thiếu định danh."}), 401
     global inventory
-    # Kiểm tra xem ID có tồn tại không
     exists = any(item['id'] == item_id for item in inventory)
     if not exists:
         return jsonify({"message": "Không tìm thấy ID này!"}), 404
@@ -40,5 +49,5 @@ def delete_item(item_id):
 
 
 if __name__ == '__main__':
-    print("--- SERVER REST V2 ĐANG CHẠY ---")
+    print("--- SERVER REST V3 (STATELESS) ĐANG CHẠY ---")
     app.run(port=5000)
