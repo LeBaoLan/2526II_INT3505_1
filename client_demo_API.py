@@ -1,27 +1,29 @@
 import requests
 
 
-def run_demo_v1():
-    endpoints = [
-        "http://localhost:5000/api/v1/books",
-        "http://localhost:5000/api/v1/books/1"
-    ]
+def run_demo_v2():
+    print("=== KIỂM CHỨNG TÍNH DỄ HIỂU (CLARITY) ===\n")
 
-    print("=== KIỂM CHỨNG TÍNH NHẤT QUÁN (CONSISTENCY) ===")
+    # 1. Thử lấy một cuốn sách không tồn tại (ID 99)
+    print("--- Case 1: Tìm sách không tồn tại ---")
+    res1 = requests.get("http://localhost:5000/api/v2/books/99")
+    print(f"Status: {res1.status_code}")
+    print(f"Phản hồi: {res1.json()}")
 
-    for url in endpoints:
-        print(f"\nĐang gọi: {url}")
-        response = requests.get(url)
-        json_data = response.json()
+    # 2. Thử thêm sách nhưng thiếu tiêu đề (title)
+    print("\n--- Case 2: Thêm sách thiếu dữ liệu ---")
+    res2 = requests.post(
+        "http://localhost:5000/api/v2/books", json={"author": "Hưng"})
+    print(f"Status: {res2.status_code}")
+    print(f"Phản hồi: {res2.json()}")
 
-        # Kiểm chứng: Luôn có khóa 'status' và 'data'
-        print(f"Mã trạng thái: {response.status_code}")
-        print(f"Cấu trúc JSON nhận được: {list(json_data.keys())}")
-        print(f"Nội dung 'data': {json_data['data']}")
+    # 3. Thêm sách đúng chuẩn
+    print("\n--- Case 3: Thêm sách thành công ---")
+    res3 = requests.post("http://localhost:5000/api/v2/books",
+                         json={"id": 2, "title": "Lập trình REST"})
+    print(f"Status: {res3.status_code}")
+    print(f"Phản hồi: {res3.json()}")
 
 
 if __name__ == "__main__":
-    try:
-        run_demo_v1()
-    except Exception as e:
-        print(f"Lỗi: Hãy chắc chắn bạn đã chạy server trước! ({e})")
+    run_demo_v2()
