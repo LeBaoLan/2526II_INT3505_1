@@ -1,29 +1,31 @@
 import requests
 
 
-def run_demo_v2():
-    print("=== KIỂM CHỨNG TÍNH DỄ HIỂU (CLARITY) ===\n")
+def test_api():
+    test_cases = [
+        ("GET tất cả sách", "GET", "http://localhost:5000/api/books", None),
+        ("GET sách sai ID", "GET", "http://localhost:5000/api/books/99", None),
+        ("POST thiếu title", "POST",
+         "http://localhost:5000/api/books", {"author": "Hưng"}),
+    ]
 
-    # 1. Thử lấy một cuốn sách không tồn tại (ID 99)
-    print("--- Case 1: Tìm sách không tồn tại ---")
-    res1 = requests.get("http://localhost:5000/api/v2/books/99")
-    print(f"Status: {res1.status_code}")
-    print(f"Phản hồi: {res1.json()}")
+    for desc, method, url, payload in test_cases:
+        print(f"Hành động: {desc}")
+        if method == "GET":
+            res = requests.get(url)
+        else:
+            res = requests.post(url, json=payload)
 
-    # 2. Thử thêm sách nhưng thiếu tiêu đề (title)
-    print("\n--- Case 2: Thêm sách thiếu dữ liệu ---")
-    res2 = requests.post(
-        "http://localhost:5000/api/v2/books", json={"author": "Hưng"})
-    print(f"Status: {res2.status_code}")
-    print(f"Phản hồi: {res2.json()}")
+        data = res.json()
 
-    # 3. Thêm sách đúng chuẩn
-    print("\n--- Case 3: Thêm sách thành công ---")
-    res3 = requests.post("http://localhost:5000/api/v2/books",
-                         json={"id": 2, "title": "Lập trình REST"})
-    print(f"Status: {res3.status_code}")
-    print(f"Phản hồi: {res3.json()}")
+        # Kiểm tra tính Nhất quán (V1)
+        print(f"  > Status: {data['status']}")
+        # Kiểm tra tính Dễ hiểu (V2)
+        print(f"  > HTTP Code: {res.status_code}")
+        if 'message' in data:
+            print(f"  > Thông báo: {data['message']}")
+        print("-" * 30)
 
 
 if __name__ == "__main__":
-    run_demo_v2()
+    test_api()
