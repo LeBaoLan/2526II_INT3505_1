@@ -2,56 +2,67 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Giả lập Database
+# Giả lập Database với 10 cuốn sách (Để test Dễ mở rộng - Phân trang)
 books = [
-    {"id": 1, "title": "Dế Mèn Phiêu Lưu Ký", "author": "Tô Hoài"}
+    {"id": i, "title": f"Lập trình REST tập {i}", "author": "Hưng"}
+    for i in range(1, 11)
 ]
 
 
-def send_response(data=None, message=None, status_code=200):
-    # Tính nhất quán (V1): Luôn có 'status' và 'data'
-    # Tính dễ hiểu (V2): Có thêm 'message' và dùng đúng 'status_code'
+def send_rest_response(data=None, message=None, metadata=None, status_code=200):
+    # V1: Tính nhất quán (Luôn có status và data)
+    # V2: Tính dễ hiểu (Có message và status_code chuẩn)
+    # V3: Tính dễ mở rộng (Có metadata để phân trang/thêm tính năng)
 
     success = status_code < 400
     response = {
         "status": "success" if success else "error",
-        "data": data,
-        "message": message
+        "message": message,
+        "metadata": metadata,
+        "data": data
     }
-
-    # Loại bỏ các trường None để JSON sạch sẽ hơn
+    # Loại bỏ các trường trống để JSON gọn hơn
     response = {k: v for k, v in response.items() if v is not None}
-
     return jsonify(response), status_code
 
 
-@app.route('/api/books', methods=['GET'])
+@app.route('/api/v3/books', methods=['GET'])
 def get_books():
-    # Nhất quán: Trả về danh sách trong 'data'
-    return send_response(data=books)
+    # V3: Dễ mở rộng qua Query Parameters (Phân trang)
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 3))
+
+        start = (page - 1) * limit
+        end = start + limit
+        paginated_items = books[start:end]
+
+        if not paginated_items and page > 1:
+            # V2: Dễ hiểu - Báo lỗi khi vượt quá số trang hiện có
+            return send_rest_response(message="Trang này không có dữ liệu", status_code=404)
+
+        meta = {
+            "total": len(books),
+            "page": page,
+            "limit": limit
+        }
+        return send_rest_response(data=paginated_items, metadata=meta)
+    except ValueError:
+        # V2: Dễ hiểu - Báo lỗi khi người dùng nhập chữ thay vì số
+        return send_rest_response(message="Tham số page/limit phải là số nguyên", status_code=400)
 
 
-@app.route('/api/books/<int:book_id>', methods=['GET'])
-def get_book(book_id):
-    book = next((b for b in books if b['id'] == book_id), None)
-    if book:
-        return send_response(data=book)
-
-    # Dễ hiểu: Báo lỗi 404 kèm thông điệp cụ thể
-    return send_response(message=f"Không tìm thấy sách ID {book_id}", status_code=404)
-
-
-@app.route('/api/books', methods=['POST'])
+@app.route('/api/v3/books', methods=['POST'])
 def add_book():
     data = request.json
+    # V2: Dễ hiểu - Kiểm tra ràng buộc dữ liệu
     if not data or 'title' not in data:
-        # Dễ hiểu: Báo lỗi 400 khi dữ liệu sai
-        return send_response(message="Dữ liệu không hợp lệ: Thiếu 'title'", status_code=400)
+        return send_rest_response(message="Lỗi: Thiếu tiêu đề sách (title)", status_code=400)
 
     books.append(data)
-    return send_response(data=data, message="Đã thêm sách mới", status_code=201)
+    return send_rest_response(data=data, message="Thêm thành công", status_code=201)
 
 
 if __name__ == '__main__':
-    print("--- SERVER CONSISTENCY & CLARITY ---")
+    print("--- SERVER FINAL: CONSISTENCY + CLARITY + EXTENSIBILITY ---")
     app.run(port=5000)
