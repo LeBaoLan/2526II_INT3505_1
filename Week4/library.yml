@@ -1,12 +1,20 @@
 openapi: 3.0.0
 info:
-  title: API Quản lý sách của Hưng
+  title: API Quản lý sách.
   description: Hệ thống quản lý thư viện đơn giản chức năng cơ bản.
   version: 1.0.0
+
+tags:
+  - name: Books
+    description: Các thao tác quản lý sách
+
 paths:
   /books:
     get:
+      tags:
+        - Books
       summary: Lấy danh sách tất cả các sách
+      description: Trả về danh sách toàn bộ sách có trong thư viện.
       responses:
         '200':
           description: Thành công
@@ -16,8 +24,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Book'
+
     post:
+      tags:
+        - Books
       summary: Thêm một cuốn sách mới
+      description: Tạo một cuốn sách mới và lưu vào hệ thống.
       requestBody:
         required: true
         content:
@@ -27,17 +39,26 @@ paths:
       responses:
         '201':
           description: Tạo sách thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
 
   /books/{id}:
     parameters:
       - name: id
         in: path
         required: true
-        description: ID của cuốn sách
+        description: ID của cuốn sách cần thao tác
         schema:
           type: integer
+          example: 1
+
     get:
+      tags:
+        - Books
       summary: Lấy chi tiết một cuốn sách
+      description: Trả về thông tin chi tiết của một cuốn sách theo ID.
       responses:
         '200':
           description: Thành công
@@ -47,8 +68,12 @@ paths:
                 $ref: '#/components/schemas/Book'
         '404':
           description: Không tìm thấy sách
+
     put:
+      tags:
+        - Books
       summary: Cập nhật thông tin sách
+      description: Cập nhật toàn bộ thông tin của một cuốn sách theo ID.
       requestBody:
         required: true
         content:
@@ -64,8 +89,12 @@ paths:
                 $ref: '#/components/schemas/Book'
         '404':
           description: Không tìm thấy sách để cập nhật
+
     delete:
+      tags:
+        - Books
       summary: Xóa một cuốn sách
+      description: Xóa vĩnh viễn một cuốn sách khỏi hệ thống theo ID.
       responses:
         '204':
           description: Xóa thành công
@@ -82,10 +111,13 @@ components:
       properties:
         id:
           type: integer
+          description: ID định danh duy nhất của cuốn sách (tự động tạo)
           example: 1
         title:
           type: string
+          description: Tên của cuốn sách
           example: "Dế Mèn Phiêu Lưu Ký"
         author:
           type: string
+          description: Tên tác giả của cuốn sách
           example: "Tô Hoài"
