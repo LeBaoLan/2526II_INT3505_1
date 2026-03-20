@@ -1,0 +1,1 @@
+Vào từng folder và thực hiện lệnh trong từng file README để có thể cài đặt và chạy
