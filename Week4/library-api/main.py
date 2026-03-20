@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 
+#
 # Khởi tạo thông tin API giống phần "info" trong YAML
 app = FastAPI(
     title="API Quản lý sách.",
@@ -21,7 +22,7 @@ class Book(BaseModel):
         json_schema_extra = {
             "example": {
                 "id": 1,
-                "title": "Dế Mèn Phiêu Lưu Ký",
+                "title": "Dế Mèn Phiêu Lưu Ký ",
                 "author": "Tô Hoài"
             }
         }
