@@ -1,0 +1,37 @@
+FORMAT: 1A
+HOST: http://api.thuvien.local
+
+# API Quản lý sách
+Hệ thống quản lý thư viện đơn giản phục vụ bài tập so sánh.
+
+## Group Books
+Các thao tác liên quan đến quản lý sách trong thư viện.
+
+### Danh sách các cuốn sách [GET /books]
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id": 1,
+                "title": "Dế Mèn Phiêu Lưu Ký",
+                "author": "Tô Hoài"
+            }
+        ]
+
+### Thêm một cuốn sách mới [POST /books]
+
++ Request (application/json)
+
+        {
+            "title": "Số Đỏ",
+            "author": "Vũ Trọng Phụng"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 2,
+            "title": "Số Đỏ",
+            "author": "Vũ Trọng Phụng"
+        }

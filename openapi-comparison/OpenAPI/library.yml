@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: API Quản lý sách
+  version: 1.0.0
+paths:
+  /books:
+    get:
+      summary: Lấy danh sách sách
+      responses:
+        '200':
+          description: Thành công
+    post:
+      summary: Thêm sách mới
+      responses:
+        '201':
+          description: Tạo thành công

@@ -1,0 +1,52 @@
+#%RAML 1.0
+title: API Quản lý sách
+version: 1.0.0
+baseUri: http://api.thuvien.local
+
+types:
+  Book:
+    type: object
+    properties:
+      id?: integer
+      title: string
+      author: string
+
+/books:
+  get:
+    description: Lấy danh sách tất cả các sách
+    responses:
+      200:
+        body:
+          application/json:
+            type: Book[]
+            example: |
+              [
+                {
+                  "id": 1,
+                  "title": "Dế Mèn Phiêu Lưu Ký",
+                  "author": "Tô Hoài"
+                }
+              ]
+  post:
+    description: Thêm một cuốn sách mới
+    body:
+      application/json:
+        properties:
+          title: string
+          author: string
+        example: |
+          {
+            "title": "Số Đỏ",
+            "author": "Vũ Trọng Phụng"
+          }
+    responses:
+      201:
+        body:
+          application/json:
+            type: Book
+            example: |
+              {
+                "id": 2,
+                "title": "Số Đỏ",
+                "author": "Vũ Trọng Phụng"
+              }
