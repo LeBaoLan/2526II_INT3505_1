@@ -12,10 +12,8 @@ DATABASE_URL = "sqlite:///./library.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 
-
 class Base(DeclarativeBase):
     pass
-
 
 # ──────────────────────────── Association tables ───────────────────────────
 book_author = Table(
@@ -31,72 +29,58 @@ book_category = Table(
 )
 
 # ──────────────────────────────── Models ──────────────────────────────────
-
-
 class Book(Base):
     __tablename__ = "books"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    title = Column(String, nullable=False)
-    isbn = Column(String, unique=True)
+    id             = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    title          = Column(String, nullable=False)
+    isbn           = Column(String, unique=True)
     published_year = Column(Integer)
-    authors = relationship(
-        "Author",   secondary=book_author,   back_populates="books")
-    categories = relationship(
-        "Category", secondary=book_category, back_populates="books")
-    copies = relationship("BookCopy", back_populates="book")
-
+    authors        = relationship("Author",   secondary=book_author,   back_populates="books")
+    categories     = relationship("Category", secondary=book_category, back_populates="books")
+    copies         = relationship("BookCopy", back_populates="book")
 
 class Author(Base):
     __tablename__ = "authors"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    name = Column(String, nullable=False)
-    books = relationship("Book", secondary=book_author,
-                         back_populates="authors")
-
+    id    = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    name  = Column(String, nullable=False)
+    books = relationship("Book", secondary=book_author, back_populates="authors")
 
 class Category(Base):
     __tablename__ = "categories"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    name = Column(String, nullable=False)
-    books = relationship("Book", secondary=book_category,
-                         back_populates="books")
-
+    id    = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    name  = Column(String, nullable=False)
+    books = relationship("Book", secondary=book_category, back_populates="categories")
 
 class BookCopy(Base):
     __tablename__ = "book_copies"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id      = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     book_id = Column(String, ForeignKey("books.id"), nullable=False)
-    status = Column(String, default="available")   # available | loaned
-    book = relationship("Book",  back_populates="copies")
-    loans = relationship("Loan",  back_populates="book_copy")
-
+    status  = Column(String, default="available")   # available | loaned
+    book    = relationship("Book",  back_populates="copies")
+    loans   = relationship("Loan",  back_populates="book_copy")
 
 class Member(Base):
     __tablename__ = "members"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    full_name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False)
+    id              = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    full_name       = Column(String, nullable=False)
+    email           = Column(String, unique=True, nullable=False)
     membership_date = Column(Date, default=date.today)
-    loans = relationship("Loan", back_populates="member")
-
+    loans           = relationship("Loan", back_populates="member")
 
 class Loan(Base):
     __tablename__ = "loans"
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id           = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     book_copy_id = Column(String, ForeignKey("book_copies.id"), nullable=False)
-    member_id = Column(String, ForeignKey("members.id"),     nullable=False)
-    borrowed_at = Column(Date, default=date.today)
-    due_date = Column(Date, nullable=False)
-    returned_at = Column(Date, nullable=True)
-    book_copy = relationship("BookCopy", back_populates="loans")
-    member = relationship("Member",   back_populates="loans")
-
+    member_id    = Column(String, ForeignKey("members.id"),     nullable=False)
+    borrowed_at  = Column(Date, default=date.today)
+    due_date     = Column(Date, nullable=False)
+    returned_at  = Column(Date, nullable=True)
+    book_copy    = relationship("BookCopy", back_populates="loans")
+    member       = relationship("Member",   back_populates="loans")
 
 Base.metadata.create_all(engine)
 
 # ─────────────────────────── Pydantic schemas ─────────────────────────────
-
-
 class BookOut(BaseModel):
     id: str
     title: str
@@ -106,10 +90,8 @@ class BookOut(BaseModel):
     categories: list[str]
     available_copies: int
 
-
 # ─────────────────────────────── App ──────────────────────────────────────
 app = FastAPI(title="Library Management API", version="1.0")
-
 
 def get_db():
     db = SessionLocal()
@@ -117,7 +99,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 def book_to_out(book: Book) -> BookOut:
     available = sum(1 for c in book.copies if c.status == "available")
@@ -132,8 +113,6 @@ def book_to_out(book: Book) -> BookOut:
     )
 
 # ──────────────────────── Seed demo data ──────────────────────────────────
-
-
 def seed(db: Session):
     if db.query(Book).count() > 0:
         return  # already seeded
@@ -159,26 +138,16 @@ def seed(db: Session):
 
     # Books + copies
     books_data = [
-        ("Clean Code",                       "978-0132350884",
-         2008, ["Clean Code"],    ["Programming", "Design"]),
-        ("Design Patterns",                  "978-0201633610",
-         1994, ["Design Pat."],   ["Design"]),
-        ("The Pragmatic Programmer",         "978-0135957059",
-         1999, ["Pragmatic"],     ["Programming"]),
-        ("Python Tricks",                    "978-1775093305",
-         2017, ["Python Tricks"], ["Python"]),
-        ("Flask Web Development",            "978-1491991732",
-         2018, ["Flask Web"],     ["Python", "Web"]),
-        ("Refactoring",                      "978-0201485677",
-         1999, ["Clean Code"],    ["Programming", "Design"]),
-        ("Fluent Python",                    "978-1491946008",
-         2015, ["Python Tricks"], ["Python"]),
-        ("Two Scoops of Django",             "978-0692915729",
-         2019, ["Flask Web"],     ["Python", "Web"]),
-        ("Head First Design Patterns",       "978-0596007126",
-         2004, ["Design Pat."],   ["Design"]),
-        ("The Clean Coder",                  "978-0137081073",
-         2011, ["Clean Code"],    ["Programming"]),
+        ("Clean Code",                       "978-0132350884", 2008, ["Clean Code"],    ["Programming", "Design"]),
+        ("Design Patterns",                  "978-0201633610", 1994, ["Design Pat."],   ["Design"]),
+        ("The Pragmatic Programmer",         "978-0135957059", 1999, ["Pragmatic"],     ["Programming"]),
+        ("Python Tricks",                    "978-1775093305", 2017, ["Python Tricks"], ["Python"]),
+        ("Flask Web Development",            "978-1491991732", 2018, ["Flask Web"],     ["Python", "Web"]),
+        ("Refactoring",                      "978-0201485677", 1999, ["Clean Code"],    ["Programming", "Design"]),
+        ("Fluent Python",                    "978-1491946008", 2015, ["Python Tricks"], ["Python"]),
+        ("Two Scoops of Django",             "978-0692915729", 2019, ["Flask Web"],     ["Python", "Web"]),
+        ("Head First Design Patterns",       "978-0596007126", 2004, ["Design Pat."],   ["Design"]),
+        ("The Clean Coder",                  "978-0137081073", 2011, ["Clean Code"],    ["Programming"]),
     ]
 
     for title, isbn, year, author_keys, cat_keys in books_data:
@@ -193,11 +162,9 @@ def seed(db: Session):
         db.add(book)
         # 2 copies per book
         for _ in range(2):
-            db.add(BookCopy(id=str(uuid.uuid4()),
-                   book_id=book.id, status="available"))
+            db.add(BookCopy(id=str(uuid.uuid4()), book_id=book.id, status="available"))
 
     db.commit()
-
 
 with SessionLocal() as _s:
     seed(_s)
@@ -207,18 +174,13 @@ with SessionLocal() as _s:
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ── 1. Search + Pagination (offset/limit) ─────────────────────────────────
-
-
 @app.get("/books", summary="Search sách với offset/limit pagination")
 def search_books(
-    q:         Optional[str] = Query(
-        None,  description="Tìm theo tên sách hoặc tác giả"),
+    q:         Optional[str] = Query(None,  description="Tìm theo tên sách hoặc tác giả"),
     category:  Optional[str] = Query(None,  description="Lọc theo thể loại"),
-    available: Optional[bool] = Query(
-        None,  description="Chỉ hiện sách còn bản mượn"),
-    offset:    int = Query(0,     ge=0,   description="Bỏ qua N bản ghi đầu"),
-    limit:     int = Query(10,    ge=1, le=100,
-                           description="Số bản ghi trả về"),
+    available: Optional[bool]= Query(None,  description="Chỉ hiện sách còn bản mượn"),
+    offset:    int           = Query(0,     ge=0,   description="Bỏ qua N bản ghi đầu"),
+    limit:     int           = Query(10,    ge=1, le=100, description="Số bản ghi trả về"),
     db: Session = Depends(get_db),
 ):
     """
@@ -237,15 +199,13 @@ def search_books(
             Book.authors.any(Author.name.ilike(f"%{q}%"))
         )
     if category:
-        query = query.filter(Book.categories.any(
-            Category.name.ilike(f"%{category}%")))
+        query = query.filter(Book.categories.any(Category.name.ilike(f"%{category}%")))
 
     total = query.count()
     books = query.offset(offset).limit(limit).all()
 
     if available is True:
-        books = [b for b in books if any(
-            c.status == "available" for c in b.copies)]
+        books = [b for b in books if any(c.status == "available" for c in b.copies)]
 
     return {
         "pagination": {
@@ -265,7 +225,7 @@ def search_books(
 def search_books_cursor(
     q:      Optional[str] = Query(None, description="Tìm theo tên sách"),
     cursor: Optional[str] = Query(None, description="ID cuối của trang trước"),
-    limit:  int = Query(5,    ge=1, le=50),
+    limit:  int           = Query(5,    ge=1, le=50),
     db: Session = Depends(get_db),
 ):
     """
@@ -288,8 +248,8 @@ def search_books_cursor(
 
     books = query.limit(limit + 1).all()
 
-    has_next = len(books) > limit
-    books = books[:limit]
+    has_next   = len(books) > limit
+    books      = books[:limit]
     next_cursor = books[-1].id if has_next else None
 
     return {
@@ -307,8 +267,8 @@ def search_books_cursor(
 @app.get("/books/page", summary="Search sách với page-based pagination")
 def search_books_page(
     q:    Optional[str] = Query(None),
-    page: int = Query(1,  ge=1),
-    size: int = Query(5,  ge=1, le=50),
+    page: int           = Query(1,  ge=1),
+    size: int           = Query(5,  ge=1, le=50),
     db: Session = Depends(get_db),
 ):
     """
@@ -323,10 +283,10 @@ def search_books_page(
     if q:
         query = query.filter(Book.title.ilike(f"%{q}%"))
 
-    total = query.count()
+    total       = query.count()
     total_pages = (total + size - 1) // size
-    offset = (page - 1) * size
-    books = query.offset(offset).limit(size).all()
+    offset      = (page - 1) * size
+    books       = query.offset(offset).limit(size).all()
 
     return {
         "pagination": {
@@ -346,8 +306,7 @@ def search_books_page(
 @app.get("/members/{member_id}/loans", summary="Lịch sử mượn sách của thành viên")
 def get_member_loans(
     member_id: str,
-    returned:  Optional[bool] = Query(
-        None, description="True=đã trả, False=đang mượn"),
+    returned:  Optional[bool] = Query(None, description="True=đã trả, False=đang mượn"),
     db: Session = Depends(get_db),
 ):
     """Resource tree demo: `/members/{id}/loans`"""
@@ -380,7 +339,3 @@ def get_member_loans(
 @app.get("/", include_in_schema=False)
 def root():
     return {"message": "Library API is running. Docs at /docs"}
-
-# pip install -r requirements.txt
-# uvicorn main:app --reload
-# Mở trình duyệt: http://localhost:8000/docs
