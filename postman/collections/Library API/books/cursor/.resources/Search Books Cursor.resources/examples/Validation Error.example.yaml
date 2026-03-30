@@ -1,0 +1,47 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/books/cursor?q=string&author=string&category=string&sort_by=i\
+    d&order=asc&cursor=string&limit=5"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    q: string
+    author: string
+    category: string
+    sort_by: id
+    order: asc
+    cursor: string
+    limit: "5"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 422
+  statusText: Unprocessable Entity (WebDAV) (RFC 4918)
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "detail": [
+          {
+            "loc": [
+              "string",
+              "string"
+            ],
+            "msg": "string",
+            "type": "string"
+          },
+          {
+            "loc": [
+              "string",
+              6896
+            ],
+            "msg": "string",
+            "type": "string"
+          }
+        ]
+      }
+order: 2000
