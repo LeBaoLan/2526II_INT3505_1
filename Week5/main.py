@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from fastapi import FastAPI, Query, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -362,6 +363,98 @@ def get_member_loans(
             "overdue":  sum(1 for l in member.loans if l.returned_at is None and l.due_date < date.today()),
         }
     })
+
+
+@app.get("/books/{book_id}")
+def get_book(book_id: str, db: Session = Depends(get_db)):
+    book = db.get(Book, book_id)
+    if not book:
+        raise HTTPException(404, f"Book '{book_id}' not found")
+    return ok(book_out(book))
+
+
+# --- Pydantic schemas cho write operations ---
+
+
+class BookIn(BaseModel):
+    title:          str
+    isbn:           Optional[str] = None
+    published_year: Optional[int] = None
+    author_names:   list[str] = []
+    category_names: list[str] = []
+
+
+def get_or_create_authors(names: list[str], db: Session) -> list[Author]:
+    result = []
+    for name in names:
+        author = db.query(Author).filter(Author.name == name).first()
+        if not author:
+            author = Author(id=str(uuid.uuid4()), name=name)
+            db.add(author)
+        result.append(author)
+    return result
+
+
+def get_or_create_categories(names: list[str], db: Session) -> list[Category]:
+    result = []
+    for name in names:
+        cat = db.query(Category).filter(Category.name == name).first()
+        if not cat:
+            cat = Category(id=str(uuid.uuid4()), name=name)
+            db.add(cat)
+        result.append(cat)
+    return result
+
+
+@app.post("/books", status_code=201)
+def create_book(body: BookIn, db: Session = Depends(get_db)):
+    if body.isbn and db.query(Book).filter(Book.isbn == body.isbn).first():
+        raise HTTPException(409, f"ISBN '{body.isbn}' already exists")
+    book = Book(
+        id=str(uuid.uuid4()), title=body.title,
+        isbn=body.isbn, published_year=body.published_year,
+        authors=get_or_create_authors(body.author_names, db),
+        categories=get_or_create_categories(body.category_names, db),
+    )
+    db.add(book)
+    db.add_all([BookCopy(id=str(uuid.uuid4()), book_id=book.id)
+               for _ in range(2)])
+    db.commit()
+    db.refresh(book)
+    return ok(book_out(book), status_code=201)
+
+
+@app.put("/books/{book_id}")
+def update_book(book_id: str, body: BookIn, db: Session = Depends(get_db)):
+    book = db.get(Book, book_id)
+    if not book:
+        raise HTTPException(404, f"Book '{book_id}' not found")
+    if body.isbn and body.isbn != book.isbn:
+        if db.query(Book).filter(Book.isbn == body.isbn).first():
+            raise HTTPException(409, f"ISBN '{body.isbn}' already exists")
+    book.title = body.title
+    book.isbn = body.isbn
+    book.published_year = body.published_year
+    book.authors = get_or_create_authors(body.author_names, db)
+    book.categories = get_or_create_categories(body.category_names, db)
+    db.commit()
+    db.refresh(book)
+    return ok(book_out(book))
+
+
+@app.delete("/books/{book_id}", status_code=204)
+def delete_book(book_id: str, db: Session = Depends(get_db)):
+    book = db.get(Book, book_id)
+    if not book:
+        raise HTTPException(404, f"Book '{book_id}' not found")
+    active_loans = [
+        c for c in book.copies for l in c.loans if l.returned_at is None]
+    if active_loans:
+        raise HTTPException(409, "Cannot delete book with active loans")
+    db.delete(book)
+    db.commit()
+    from fastapi.responses import Response
+    return Response(status_code=204)
 
 
 @app.get("/", include_in_schema=False)

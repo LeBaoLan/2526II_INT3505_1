@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{baseUrl}}/books/:book_id"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  book_id: string
+examples: ./.resources/Get Book.resources/examples
+order: 1000

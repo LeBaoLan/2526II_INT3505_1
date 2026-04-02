@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{baseUrl}}/books/:book_id"
+method: DELETE
+headers:
+  Accept: application/json
+pathVariables:
+  book_id: string
+examples: ./.resources/Delete Book.resources/examples
+order: 3000

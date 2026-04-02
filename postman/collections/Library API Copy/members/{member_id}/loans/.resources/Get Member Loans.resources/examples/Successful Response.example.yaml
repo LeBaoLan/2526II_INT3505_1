@@ -1,0 +1,23 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/members/:member_id/loans?returned=false&overdue=false&sort_by\
+    =borrowed_at&order=desc"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    returned: "false"
+    overdue: "false"
+    sort_by: borrowed_at
+    order: desc
+  pathVariables:
+    member_id: string
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: text
+    content: ""
+order: 1000
