@@ -1,0 +1,8 @@
+$kind: http-request
+description: Kiem tra so ban ghi da seed.
+url: "{{baseUrl}}/bench/stats"
+method: GET
+headers:
+  Accept: application/json
+examples: ./.resources/Thong ke bang benchmark.resources/examples
+order: 1000

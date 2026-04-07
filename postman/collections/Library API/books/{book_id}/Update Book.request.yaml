@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/books/:book_id"
+method: PUT
+headers:
+  Content-Type: application/json
+  Accept: application/json
+pathVariables:
+  book_id: string
+body:
+  type: json
+  content: |-
+    {
+      "title": "string",
+      "isbn": null,
+      "published_year": null
+    }
+examples: ./.resources/Update Book.resources/examples
+order: 2000

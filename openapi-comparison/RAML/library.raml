@@ -1,5 +1,5 @@
 #%RAML 1.0
-title: API Quản lý sách
+title: API Quan ly sach
 version: 1.0.0
 baseUri: http://api.thuvien.local
 
@@ -13,7 +13,7 @@ types:
 
 /books:
   get:
-    description: Lấy danh sách tất cả các sách
+    description: Lay tat ca cac sach
     responses:
       200:
         body:
@@ -23,12 +23,12 @@ types:
               [
                 {
                   "id": 1,
-                  "title": "Dế Mèn Phiêu Lưu Ký",
-                  "author": "Tô Hoài"
+                  "title": "De Men phieu luu ky",
+                  "author": "To Hoai"
                 }
               ]
   post:
-    description: Thêm một cuốn sách mới
+    description: Them mot cuon sach moi
     body:
       application/json:
         properties:
@@ -36,8 +36,8 @@ types:
           author: string
         example: |
           {
-            "title": "Số Đỏ",
-            "author": "Vũ Trọng Phụng"
+            "title": "So Do",
+            "author": "Vu Trong Phung"
           }
     responses:
       201:
@@ -47,6 +47,6 @@ types:
             example: |
               {
                 "id": 2,
-                "title": "Số Đỏ",
-                "author": "Vũ Trọng Phụng"
+                "title": "So Do",
+                "author": "Vu Trong Phung"
               }

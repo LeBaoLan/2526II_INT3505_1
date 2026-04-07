@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/books/page?q=string&author=string&category=string&year_from=1\
+  260&year_to=1260&sort_by=title&order=asc&page=1&size=5"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  q: string
+  author: string
+  category: string
+  year_from: "1260"
+  year_to: "1260"
+  sort_by: title
+  order: asc
+  page: "1"
+  size: "5"
+examples: ./.resources/Search Books Page.resources/examples
+order: 1000

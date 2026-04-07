@@ -1,3 +1,5 @@
+from sqlalchemy import text as sa_text
+import time
 from pydantic import BaseModel
 from fastapi import FastAPI, Query, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
@@ -455,6 +457,100 @@ def delete_book(book_id: str, db: Session = Depends(get_db)):
     db.commit()
     from fastapi.responses import Response
     return Response(status_code=204)
+
+
+# =============================================================================
+# BENCHMARK — so sanh offset vs cursor tren 1 trieu ban ghi
+# =============================================================================
+
+
+@app.get("/bench/offset", summary="Benchmark offset/limit tren books_bench")
+def bench_offset(
+    offset: int = Query(0,  ge=0),
+    limit:  int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """
+    Demo hieu nang offset. Thu voi offset nho (0) va lon (500000, 900000).
+    Thoi gian query nam trong field query_ms cua response.
+    """
+    t0 = time.perf_counter()
+    rows = db.execute(
+        sa_text(
+            "SELECT id, title, genre, year FROM books_bench ORDER BY id LIMIT :lim OFFSET :off"),
+        {"lim": limit, "off": offset}
+    ).fetchall()
+    query_ms = round((time.perf_counter() - t0) * 1000, 2)
+
+    return ok(
+        data=[{"id": r[0], "title": r[1], "genre": r[2], "year": r[3]}
+              for r in rows],
+        meta={
+            "method":   "offset_limit",
+            "offset":   offset,
+            "limit":    limit,
+            "returned": len(rows),
+            "query_ms": query_ms,
+            "note":     "query_ms tang manh khi offset lon"
+        }
+    )
+
+
+@app.get("/bench/cursor", summary="Benchmark cursor tren books_bench")
+def bench_cursor(
+    cursor: Optional[str] = Query(
+        None, description="id cua ban ghi cuoi trang truoc"),
+    limit:  int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """
+    Demo hieu nang cursor. query_ms giu nguyen du cursor o trang nao.
+    Lay next_cursor tu response roi dan vao cursor de qua trang tiep.
+    """
+    t0 = time.perf_counter()
+    if cursor:
+        rows = db.execute(
+            sa_text(
+                "SELECT id, title, genre, year FROM books_bench WHERE id > :cur ORDER BY id LIMIT :lim"),
+            {"cur": cursor, "lim": limit + 1}
+        ).fetchall()
+    else:
+        rows = db.execute(
+            sa_text(
+                "SELECT id, title, genre, year FROM books_bench ORDER BY id LIMIT :lim"),
+            {"lim": limit + 1}
+        ).fetchall()
+    query_ms = round((time.perf_counter() - t0) * 1000, 2)
+
+    has_next = len(rows) > limit
+    rows = rows[:limit]
+    next_cursor = rows[-1][0] if has_next and rows else None
+
+    return ok(
+        data=[{"id": r[0], "title": r[1], "genre": r[2], "year": r[3]}
+              for r in rows],
+        meta={
+            "method":      "cursor",
+            "cursor":      cursor,
+            "next_cursor": next_cursor,
+            "limit":       limit,
+            "has_next":    has_next,
+            "returned":    len(rows),
+            "query_ms":    query_ms,
+            "note":        "query_ms on dinh du o trang nao"
+        }
+    )
+
+
+@app.get("/bench/stats", summary="Thong ke bang benchmark")
+def bench_stats(db: Session = Depends(get_db)):
+    """Kiem tra so ban ghi da seed."""
+    try:
+        count = db.execute(
+            sa_text("SELECT COUNT(*) FROM books_bench")).fetchone()[0]
+        return ok({"total_records": count, "table": "books_bench"})
+    except Exception:
+        return err(404, "Bang books_bench chua ton tai. Chay: python seed_large.py")
 
 
 @app.get("/", include_in_schema=False)
