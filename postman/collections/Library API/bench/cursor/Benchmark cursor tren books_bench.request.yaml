@@ -1,14 +1,15 @@
 $kind: http-request
+name: Benchmark cursor tren books_bench
 description: |-
   Demo hieu nang cursor. query_ms giu nguyen du cursor o trang nao.
   Lay next_cursor tu response roi dan vao cursor de qua trang tiep.
-url: "{{baseUrl}}/bench/cursor?cursor=string&limit=10"
+url: "{{baseUrl}}/bench/cursor?cursor=<next_cursor>&limit=10"
 method: GET
 headers:
   Accept: application/json
 queryParams:
   - key: cursor
-    value: string
+    value: <next_cursor>
     description: id cua ban ghi cuoi trang truoc
   - key: limit
     value: "10"

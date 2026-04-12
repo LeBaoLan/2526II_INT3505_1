@@ -3,12 +3,12 @@ name: Benchmark offset/limit tren books_bench
 description: |-
   Demo hieu nang offset. Thu voi offset nho (0) va lon (500000, 900000).
   Thoi gian query nam trong field query_ms cua response.
-url: "{{baseUrl}}/bench/offset?offset=0&limit=10"
+url: "{{baseUrl}}/bench/offset?offset=999000&limit=10"
 method: GET
 headers:
   Accept: application/json
 queryParams:
-  offset: "0"
+  offset: "999000"
   limit: "10"
 examples: ./.resources/Benchmark offset-limit tren books_bench.resources/examples
 order: 1000
