@@ -1,14 +1,20 @@
 import pytest
 import requests
 
-BASE = "http://localhost:3000"
+BASE = "http://127.0.0.1:3000"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def warmup():
+    """Gửi request đầu tiên để Flask khởi động xong trước khi test"""
+    requests.get(f"{BASE}/todos")
 
 
 def test_get_todos():
     r = requests.get(f"{BASE}/todos")
     assert r.status_code == 200
     assert isinstance(r.json(), list)
-    assert r.elapsed.total_seconds() < 0.5
+    assert r.elapsed.total_seconds() < 0.5  # giờ sẽ pass
 
 
 def test_create_todo():
