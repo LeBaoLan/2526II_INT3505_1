@@ -9,16 +9,17 @@ router = APIRouter()
 # ── Schema ──────────────────────────────────────────────
 
 class RefundCreate(BaseModel):
-    payment_id: str = Field(..., example="pay_abc123")
-    reason: Optional[str] = Field(None, example="Khách hàng yêu cầu hoàn tiền")
+    reason: Optional[str] = Field(None, example="Khach hang yeu cau hoan tien")
 
 
 # ── Endpoints ───────────────────────────────────────────
 
-@router.post("/refunds", status_code=201)
-def create_refund(body: RefundCreate):
-    """Tạo yêu cầu hoàn tiền cho một giao dịch."""
-    payment = payments_db.get(body.payment_id)
+# THAY DOI: v1 la POST /refunds voi payment_id trong body
+#           v2 la POST /payments/{payment_id}/refund
+@router.post("/payments/{payment_id}/refund", status_code=201)
+def create_refund(payment_id: str, body: RefundCreate):
+    """Hoan tien cho mot giao dich."""
+    payment = payments_db.get(payment_id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
     if payment["status"] == "refunded":
@@ -27,12 +28,12 @@ def create_refund(body: RefundCreate):
     ref_id = new_id("ref")
     record = {
         "id": ref_id,
-        "payment_id": body.payment_id,
+        "payment_id": payment_id,
         "amount": payment["amount"],
         "status": "refunded",
         "reason": body.reason,
         "created_at": now(),
     }
     refunds_db[ref_id] = record
-    payments_db[body.payment_id]["status"] = "refunded"
+    payments_db[payment_id]["status"] = "refunded"
     return record

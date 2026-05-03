@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
-# Lưu trữ tạm trong bộ nhớ
 payments_db: dict = {}
 refunds_db: dict = {}
 
@@ -11,4 +10,5 @@ def new_id(prefix="pay") -> str:
 
 
 def now() -> str:
-    return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    # THAY DOI: v2 tra "2026-04-26T16:56:51+00:00" (ISO 8601 day du timezone)
+    return datetime.now(timezone.utc).isoformat()
