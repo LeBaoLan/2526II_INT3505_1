@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import re
 import threading
 import time
@@ -16,6 +17,10 @@ from flask import Flask, jsonify, make_response, request
 
 
 app = Flask(__name__)
+
+APP_HOST = os.getenv("APP_HOST", "127.0.0.1")
+APP_PORT = int(os.getenv("APP_PORT", "3000"))
+WEBHOOK_TIMEOUT_SECONDS = int(os.getenv("WEBHOOK_TIMEOUT_SECONDS", "5"))
 
 db = {
     "users": {},
@@ -187,7 +192,7 @@ def deliver_webhook(subscription, event, attempt=1):
     )
 
     try:
-        with urlopen(req, timeout=3) as response:
+        with urlopen(req, timeout=WEBHOOK_TIMEOUT_SECONDS) as response:
             status_code = response.status
             delivery["statusCode"] = status_code
             delivery["status"] = "succeeded" if 200 <= status_code < 300 else "failed"
@@ -606,4 +611,4 @@ seed_data()
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=3000, debug=True)
+    app.run(host=APP_HOST, port=APP_PORT, debug=True)

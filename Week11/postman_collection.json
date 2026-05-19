@@ -1,0 +1,171 @@
+{
+  "info": {
+    "name": "Notification API Demo",
+    "description": "Postman collection for Flask notification API demo with CRUD, Query, HATEOAS, Event-driven and Webhook patterns.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:3000"
+    },
+    {
+      "key": "webhook_url",
+      "value": "http://127.0.0.1:4000/webhooks/notifications"
+    },
+    {
+      "key": "notification_id",
+      "value": "ntf_001"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "Create user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"student@example.com\",\n  \"phone\": \"+84901234567\",\n  \"deviceTokens\": [\"device_1\"]\n}"
+        },
+        "url": "{{base_url}}/users"
+      }
+    },
+    {
+      "name": "List users",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/users"
+      }
+    },
+    {
+      "name": "Create template",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Payment success\",\n  \"channel\": \"email\",\n  \"subject\": \"Payment {{orderId}}\",\n  \"body\": \"Your order {{orderId}} was paid successfully.\"\n}"
+        },
+        "url": "{{base_url}}/notification-templates"
+      }
+    },
+    {
+      "name": "Create webhook subscription",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"{{webhook_url}}\",\n  \"events\": [\"notification.sent\", \"notification.failed\"]\n}"
+        },
+        "url": "{{base_url}}/webhook-subscriptions"
+      }
+    },
+    {
+      "name": "Send notification",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "demo-request-001"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"recipientId\": \"usr_001\",\n  \"channel\": \"email\",\n  \"title\": \"Webhook demo\",\n  \"content\": \"This should trigger webhook\"\n}"
+        },
+        "url": "{{base_url}}/notifications"
+      }
+    },
+    {
+      "name": "Send notification by template",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"recipientId\": \"usr_001\",\n  \"templateId\": \"tpl_001\",\n  \"variables\": {\n    \"name\": \"An\"\n  }\n}"
+        },
+        "url": "{{base_url}}/notifications"
+      }
+    },
+    {
+      "name": "Query sent notifications",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/notifications?recipientId=usr_001&status=sent&page=1&pageSize=10"
+      }
+    },
+    {
+      "name": "Create failed notification",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"recipientId\": \"usr_001\",\n  \"channel\": \"email\",\n  \"title\": \"fail demo\",\n  \"content\": \"This message will fail\"\n}"
+        },
+        "url": "{{base_url}}/notifications"
+      }
+    },
+    {
+      "name": "Retry failed notification",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/notifications/{{notification_id}}/retry"
+      }
+    },
+    {
+      "name": "List events",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/events"
+      }
+    },
+    {
+      "name": "List webhook deliveries",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/webhook-deliveries"
+      }
+    }
+  ]
+}
